@@ -41,69 +41,91 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function convertTable() {
     return new Promise(function (resolve, reject) {
-        // Write code here to locate and convert the specific table on the page
-        // Example code for finding and formatting the table:
-        const headers = document.querySelectorAll("h4");
-        let header;
+        try {
+            const headers = document.querySelectorAll("h4");
+            let header;
 
-        headers.forEach(function (h) {
-            if (h.textContent.includes("Stored Results - Detailed")) {
-                header = h;
-            }
-        });
+            headers.forEach(function (h) {
+                if (h.textContent.includes("Stored Results - Detailed")) {
+                    header = h;
+                }
+            });
 
-        const table = header.nextElementSibling;
-        const rows = table.querySelectorAll("tr");
-        const data = [];
+            const table = header.nextElementSibling;
+            const rows = table.querySelectorAll("tr");
+            const activeRows = table.querySelectorAll("tr.table-active");
+            console.log(activeRows);
+            const data = [];
 
-        rows.forEach(function (row) {
-            const columns = row.querySelectorAll("td");
-            if (columns.length === 3) {
-                const name = columns[0].textContent.trim();
-                const credits = columns[1].textContent.trim();
-                const achievement = columns[2].textContent.trim();
+            let count = 0;
+            rows.forEach(function (row) {
+                const columns = row.querySelectorAll("td");
+                if (columns.length === 3) {
+                    const name = columns[0].textContent.trim();
+                    const credits = columns[1].textContent.trim();
+                    const achievement = columns[2].textContent.trim();
+                    const subject = activeRows[count].textContent.trim();
 
-                data.push({
-                    name,
-                    credits,
-                    achievement,
-                });
-            }
-        });
+                    console.log(subject, name, credits, achievement);
 
-        function convertAndFormatData(data) {
-            return new Promise(function (resolve, reject) {
-                const formattedData = [];
-                data.forEach(function (item) {
-                    const regex = /^(.*?)\s+(\d+\.\d+)\s+-\s+(.*)$/;
-                    const match = item.name.match(regex);
-                    if (match) {
-                        const subject = match[1];
-                        const standardNumber = match[2];
-                        const name = match[3];
-                        const credits = item.credits.replace(" credits", "").trim();
-                        const achievement = item.achievement.replace("Achieved With ", "").trim();
-
-                        formattedData.push({
-                            name,
-                            credits,
-                            subject,
-                            achievement,
-                            standardNumber,
-                        });
+                    if (activeRows[count + 1]) {
+                        const nextSubject = activeRows[count + 1].textContent.trim();
+                        if (subject !== nextSubject || subject === "Other") {
+                            count++;
+                        }
                     }
-                });
-                resolve(formattedData);
-            });
-        }
 
-        convertAndFormatData(data)
-            .then(function (formattedData) {
-                resolve(formattedData);
-            })
-            .catch(function (error) {
-                reject(error);
+                    data.push({
+                        name,
+                        credits,
+                        achievement,
+                        subject,
+                    });
+                }
             });
+
+            function convertAndFormatData(data) {
+                return new Promise(function (resolve, reject) {
+                    const filteredData = data.filter(function (item) {
+                        return !item.name.startsWith("Scholarship");
+                    });
+
+                    const formattedData = [];
+                    filteredData.forEach(function (item) {
+                        const regex = /^(.*?)\s+(\d+\.\d+)\s+-\s+(.*)$/;
+                        const match = item.name.match(regex);
+                        if (match) {
+                            const subject = item.subject;
+                            const standardNumber = match[2];
+                            const name = match[3];
+                            const credits = item.credits.replace(" credits", "").trim();
+                            const achievement = item.achievement.replace("Achieved With ", "").trim();
+
+                            formattedData.push({
+                                name,
+                                credits,
+                                subject,
+                                achievement,
+                                standardNumber,
+                            });
+                        }
+                    });
+                    resolve(formattedData);
+                });
+            }
+
+            convertAndFormatData(data)
+                .then(function (formattedData) {
+                    resolve(formattedData);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    reject(error);
+                });
+        } catch (error) {
+            console.log(error);
+            reject(error);
+        }
     });
 }
 
