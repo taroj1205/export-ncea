@@ -60,13 +60,13 @@ function convertTable() {
             let count = 0;
             rows.forEach(function (row) {
                 const columns = row.querySelectorAll("td");
+                const subject = activeRows[count].textContent.trim();
                 if (columns.length === 3) {
                     const name = columns[0].textContent.trim();
                     const credits = columns[1].textContent.trim();
                     const achievement = columns[2].textContent.trim();
-                    const subject = activeRows[count].textContent.trim();
 
-                    console.log(subject, name, credits, achievement);
+                    // console.log(subject, name, credits, achievement);
 
                     if (activeRows[count + 1]) {
                         const nextSubject = activeRows[count + 1].textContent.trim();
@@ -75,23 +75,34 @@ function convertTable() {
                         }
                     }
 
+                    if (!name || !credits || !achievement || !subject) {
+                        return;
+                    }
+
+                    if (subject === "13ESJPN") {
+                        console.log(subject, name, credits, achievement);
+                    }
+
                     data.push({
                         name,
                         credits,
                         achievement,
                         subject,
                     });
+                } else {
+                    if (activeRows[count + 1]) {
+                        const nextSubject = activeRows[count + 1].textContent.trim();
+                        if (subject !== nextSubject || subject === "Other") {
+                            count++;
+                        }
+                    }
                 }
             });
 
             function convertAndFormatData(data) {
                 return new Promise(function (resolve, reject) {
-                    const filteredData = data.filter(function (item) {
-                        return !item.name.startsWith("Scholarship");
-                    });
-
                     const formattedData = [];
-                    filteredData.forEach(function (item) {
+                    data.forEach(function (item) {
                         const regex = /^(.*?)\s+(\d+\.\d+)\s+-\s+(.*)$/;
                         const match = item.name.match(regex);
                         if (match) {
