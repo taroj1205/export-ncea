@@ -55,21 +55,46 @@ function convertTable() {
         const table = header.nextElementSibling;
         const rows = table.querySelectorAll("tr");
         const data = [];
+        try {
+            rows.forEach(function (row) {
+                let name;
+                const columns = row.querySelectorAll("td");
+                if (columns.length === 3) {
+                    name = columns[0].textContent.trim();
+                    const credits = columns[1].textContent.trim();
+                    const achievement = columns[2].textContent.trim();
 
-        rows.forEach(function (row) {
-            const columns = row.querySelectorAll("td");
-            if (columns.length === 3) {
-                const name = columns[0].textContent.trim();
-                const credits = columns[1].textContent.trim();
-                const achievement = columns[2].textContent.trim();
+                    let subject = '';
 
-                data.push({
-                    name,
-                    credits,
-                    achievement,
-                });
-            }
-        });
+                    let prevElement = row.previousElementSibling;
+                    while (prevElement) {
+                        if (prevElement.classList.contains("table-active")) {
+                            subject = prevElement.textContent.trim();
+                            if (subject.includes('MAC')) {
+                                name = name.replace('Mathematics and Statistics', 'Calculus');
+                                console.log(name)
+
+                            } else if (subject.includes('MAS')) {
+                                name = name.replace('Mathematics and Statistics', 'Statistics');
+                                console.log(name)
+
+                            }
+
+                            break;
+                        }
+                        prevElement = prevElement.previousElementSibling;
+                    }
+
+                    data.push({
+                        name,
+                        credits,
+                        achievement,
+                    });
+                }
+            });
+        } catch (error) {
+            console.log(error)
+        }
 
         function convertAndFormatData(data) {
             return new Promise(function (resolve, reject) {
